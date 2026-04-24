@@ -2,6 +2,12 @@ import threading
 import time
 import asyncio
 
+class MyAbortController:
+    def __init__(self):
+        self.is_cancelled = False
+    def abort(self):
+        self.is_cancelled = True
+
 class AsyncMapper:
     def __init__(self, data):
         self.data = data
@@ -39,3 +45,19 @@ class AsyncMapper:
             val = await async_func(i)
             out.append(val)
         return out
+
+    async def map_with_abort(self, async_func, controller):
+        temp = []
+        for item in self.data:
+            if controller.is_cancelled:
+                return temp
+            temp.append(await async_func(item))
+        return temp
+
+async def slow_func(n):
+    await asyncio.sleep(0.1)
+    return n * 5
+
+async def run_demo():
+    mapper = AsyncMapper([1, 2, 3])
+    print(await mapper.map_async(slow_func))

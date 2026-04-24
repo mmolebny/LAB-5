@@ -58,6 +58,17 @@ async def slow_func(n):
     await asyncio.sleep(0.1)
     return n * 5
 
-async def run_demo():
-    mapper = AsyncMapper([1, 2, 3])
-    print(await mapper.map_async(slow_func))
+async def main():
+    m = AsyncMapper([10, 20, 30])
+    def cb(data):
+        print(f"callback: {data}")
+    m.map_with_callback(lambda x: x * 2, cb)
+    print("promise:", await m.map_promise(slow_func))
+    print("async:", await m.map_async(slow_func))
+    ctrl = MyAbortController()
+    ctrl.abort()
+    print("abort:", await m.map_with_abort(slow_func, ctrl))
+    await asyncio.sleep(1)
+
+if __name__ == "__main__":
+    asyncio.run(main())
